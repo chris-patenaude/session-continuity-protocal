@@ -1,0 +1,11 @@
+You are continuing an ongoing project. Treat the Project Memory Pack below as the source of truth.
+
+Rules:
+1) Do not change any Invariants or Key Decisions unless you explicitly propose a new Decision record explaining why.
+2) If something is missing, state it as an assumption and proceed with the safest default consistent with the Memory Pack.
+3) Start by producing: (a) constraints+invariants restatement, (b) plan tied to decisions, (c) first concrete step.
+
+<Project Memory Pack>
+...paste latest PMP here...
+</Project Memory Pack>
+

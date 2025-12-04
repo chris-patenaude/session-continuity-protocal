@@ -1,0 +1,24 @@
+name: Spec Clarification
+description: Ask a question about how to interpret the SCP specification
+title: "[Question]: "
+labels: ["question"]
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Which part of the spec is unclear?
+      description: Please cite the section number or quote the text.
+      placeholder: "e.g., Section 9.4 Patch Contract..."
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is the ambiguity?
+      description: Explain why it's confusing or how it could be interpreted in multiple ways.
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Interpretation (Optional)
+      description: How do you think it should be read?
+

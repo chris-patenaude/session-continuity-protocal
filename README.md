@@ -10,6 +10,40 @@ Session Continuity Protocol (SCP) is a lightweight, repeatable method for preven
 
 ---
 
+## At a Glance
+
+- **What you get:**
+  - **Templates:** Ready-to-use [Project Memory Pack](templates/project_memory_pack.md), [Decision Record](templates/decision_record_adr_lite.md), and [Changelog](templates/changelog.md).
+  - **Prompts:** [Bootstrap](prompts/bootstrap_prompt.txt) and [Closeout](prompts/closeout_prompt.txt) prompts to copy/paste.
+  - **Examples:** [Full example project](examples/example_1_simple_project/) demonstrating the workflow.
+
+## Quickstart (15 minutes)
+
+1. **Setup:** Copy `templates/project_memory_pack.md` into your project (e.g., as `docs/project_memory_pack.md`).
+2. **Start Session:** Copy/paste `prompts/bootstrap_prompt.txt` at the start of your AI chat session.
+3. **Work:** Proceed with your task. If you make a key decision, log it using `templates/decision_record_adr_lite.md`.
+4. **End Session:** Copy/paste `prompts/closeout_prompt.txt`. Update your PMP and save it.
+
+---
+
+## Table of Contents
+
+1. [Problem Statement](#1-problem-statement)
+2. [Analogy](#2-analogy-each-new-chat-session-is-a-new-hires-first-day)
+3. [Solution Overview](#3-solution-overview)
+4. [Definitions](#4-definitions)
+5. [Required Artifacts](#5-required-artifacts)
+6. [Operating Procedure](#6-operating-procedure)
+7. [Quality Controls](#7-quality-controls-recommended)
+8. [Implementation Options](#8-implementation-options)
+9. [Advanced Usage: Agent-Managed Continuity](#9-advanced-usage-agent-managed-continuity-automated-pmpadr-maintenance)
+10. [Failure Modes](#10-common-failure-modes-and-mitigations)
+11. [Checklist](#11-minimal-checklist-operational)
+12. [Adoption Guidance](#12-adoption-guidance)
+13. [Versioning Policy](#13-versioning-policy)
+
+---
+
 ## 1) Problem Statement
 
 Large or complex tasks frequently exceed a single session’s context window. When work is split across multiple sessions, the next session often starts “cold,” resulting in:
@@ -517,6 +551,18 @@ To deploy SCP across a team:
 
 ---
 
+## 13) Versioning Policy
+
+SCP follows a semantic versioning approach for the protocol specification itself:
+
+- **MAJOR**: Breaking changes to the core workflow, invariant definition, or required artifacts.
+- **MINOR**: Additive changes (new optional artifacts, recommended patterns) that do not break existing workflows.
+- **PATCH**: Clarifications, typo fixes, or non-normative examples.
+
+See [CHANGELOG.md](CHANGELOG.md) for history.
+
+---
+
 ## Resources
 
 - **Architecture Decision Records (ADRs) and decision logs:** ([Architectural Decision Records][1])
@@ -541,4 +587,5 @@ To deploy SCP across a team:
 
 ## License
 
-The SCP specification and other documentation in this repository are licensed under **CC BY 4.0** (see `LICENSE`).
+- **Spec & documentation:** [CC BY 4.0](LICENSE)
+- **Code/scripts (if added later):** MIT/Apache-2.0 (currently this repo contains only documentation and templates).

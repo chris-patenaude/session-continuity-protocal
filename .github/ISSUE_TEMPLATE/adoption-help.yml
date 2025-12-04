@@ -1,0 +1,22 @@
+name: Adoption Help
+description: Get help implementing SCP in your team or project
+title: "[Adoption]: "
+labels: ["help wanted"]
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Project Context
+      description: Describe your team size, tech stack, and current workflow.
+    validations:
+      required: true
+  - type: textarea
+    id: blockers
+    attributes:
+      label: What is blocking you?
+      description: "e.g., The team forgets to update PMP, or the agent ignores invariants."
+  - type: textarea
+    id: attempts
+    attributes:
+      label: What have you tried?
+

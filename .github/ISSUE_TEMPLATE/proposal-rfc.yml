@@ -1,0 +1,28 @@
+name: Proposal / RFC
+description: Suggest a change or addition to the SCP specification
+title: "[RFC]: "
+labels: ["enhancement", "rfc"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What friction or missing capability are you solving?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Change
+      description: Describe the change to the protocol.
+  - type: textarea
+    id: text_changes
+    attributes:
+      label: Proposed Text Changes
+      description: Show the specific diff or new text you want to insert.
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact on Compatibility
+      description: Is this a breaking change for existing adopters?
+

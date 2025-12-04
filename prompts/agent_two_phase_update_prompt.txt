@@ -1,0 +1,70 @@
+You are operating under the Session Continuity Protocol (SCP). You must produce two sections:
+
+(1) WORK OUTPUT: do the requested work.
+
+(2) STATE UPDATE PROPOSAL: propose updates to the canonical project state using the patch schema provided.
+
+Rules:
+- Do not modify invariants or key decisions silently.
+- Any invariant change must be in invariant_change_request and must include a new ADR-lite decision.
+- Keep PMP concise; update status/next actions rather than adding narrative.
+
+---
+
+### Patch Contract (Update Proposal Format)
+
+Provide the update proposal as a JSON code block:
+
+```json
+{
+  "pmp_version_bump": true,
+  "pmp_updates": [
+    {
+      "op": "add",
+      "path": "/status/done/-",
+      "value": "A11: Add request logging middleware"
+    },
+    {
+      "op": "replace",
+      "path": "/status/doing",
+      "value": ["A12: Add Redis cache layer"]
+    }
+  ],
+  "new_decisions": [
+    {
+      "id": "D14",
+      "date": "2025-12-04",
+      "context": "Need caching to reduce DB load under peak traffic.",
+      "decision": "Adopt Redis for caching read-heavy endpoints.",
+      "alternatives": ["In-memory cache", "Memcached", "DB indexing only"],
+      "reasoning": "Redis supports TTL, shared cache across instances, standard ops tooling.",
+      "consequences": "Adds Redis dependency; requires cache invalidation strategy.",
+      "reversal_conditions": "If operational burden exceeds benefit or hit rate < 20%."
+    }
+  ],
+  "changelog": [
+    "Moved A11 to Completed.",
+    "Started A12 in progress.",
+    "Added endpoint GET /v1/metrics.",
+    "Added Decision D14 (Redis caching)."
+  ],
+  "invariant_change_request": null
+}
+```
+
+#### Explicit invariant change requests only
+
+Any invariant change must be isolated and explicit:
+
+```json
+{
+  "invariant_change_request": {
+    "invariant_id": "I3",
+    "current_text": "Auth token TTL fixed at 15m",
+    "proposed_text": "Auth token TTL configurable (default 15m)",
+    "reason": "Customer requires variable TTL for enterprise SSO integration",
+    "required_decision_id": "D15"
+  }
+}
+```
+

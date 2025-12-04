@@ -1,0 +1,5 @@
+Before we end, produce:
+1) Updated Project Memory Pack (increment version)
+2) Any new Decision entries (ADR-lite)
+3) A short changelog vs prior version
+
