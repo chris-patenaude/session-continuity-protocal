@@ -1,155 +1,534 @@
-# Session Chaining Protocal (SCP)
+# Session Continuity Protocol (SCP)
 
-Continuity for multi-session AI work using a single handoff artifact (`HANDOFF.md`)
+Session Continuity Protocol (SCP) is a lightweight, repeatable method for preventing “session amnesia” when using large language models across multiple chat sessions on the same project. It treats each new session as equivalent to onboarding a capable new developer who has not attended prior meetings: without a structured handoff, prior decisions, constraints, and progress are lost, leading to incorrect assumptions, drift, rework, and token inefficiency. SCP addresses this by establishing a small set of durable, versioned artifacts—primarily a Project Memory Pack (PMP) and an ADR-lite Decision Log—plus an optional changelog, and by enforcing a “no silent changes” rule so that key decisions and invariants cannot change without explicit documentation and rationale. The result is a consistent, auditable project state that can be loaded at the start of every session and updated at the end, enabling faster restarts, better alignment, and reliable multi-session execution.
 
----
+**Audience:** Project developers and technical leads using LLMs across multiple sessions for design, implementation, analysis, documentation, and planning.
 
-## 1) What SCP is
+**Purpose:** Provide a repeatable process and set of artifacts that preserve project state across sessions, reducing drift, rework, and token waste.
 
-**Session Chaining Protocal (SCP)** is a continuity method for splitting large or complex AI tasks across multiple chat sessions without losing state or wasting the new session’s context window. SCP relies on a single machine-oriented handoff artifact, `HANDOFF.md`, that carries only the information required to resume work accurately: global operating rules, a compact project snapshot, current state, key decisions and invariants, a session-by-session roadmap, and explicit kickoff instructions for the next session. At the end of each session, the agent updates and outputs the full `HANDOFF.md`, enabling the next session to continue without rereading the entire project or re-deriving assumptions.
-
----
-
-## 2) The problem SCP solves
-
-Large or complex tasks can exceed a single session’s context window. Splitting work into multiple sessions introduces “session amnesia”:
-
-- The new session lacks prior decisions and state, so it may make incorrect assumptions.
-- Reloading the full project context consumes the new session’s budget and still misses tacit decisions.
-- The result is drift, rework, and token inefficiency.
-
-SCP addresses this by **treating continuity as a first-class deliverable**.
+**Core principle:** Chat history is not state. State must be explicit, versioned, and reloadable.
 
 ---
 
-## 3) Core mechanism: the continuity artifact (`HANDOFF.md`)
+## 1) Problem Statement
 
-SCP uses **one** document as an AI-to-AI state carrier:
+Large or complex tasks frequently exceed a single session’s context window. When work is split across multiple sessions, the next session often starts “cold,” resulting in:
 
-- **File name:** `HANDOFF.md`
-- **Purpose:** machine-oriented continuity (not human documentation)
-- **Contents:** only “decision-critical” and “execution-critical” context:
-  - current objective and scope boundaries
-  - what exists and what is broken/blocked
-  - key interfaces/contracts (exact signatures), definitions, and invariants
-  - minimal repo/artifact map (only what matters next)
-  - how to run/validate, test status, recurring pitfalls
-  - **project roadmap** broken into sessions (big picture)
-  - kickoff instructions for the next session (first actions, deliverable, pitfalls)
+- **Loss of decisions and state:** The new session lacks prior choices, rationale, progress, and constraints.
+- **Incorrect assumptions:** The model fills gaps with plausible but wrong defaults.
+- **High token cost to reload context:** Pasting full history is expensive and still misses tacit decisions.
+- **Drift and rework:** Output becomes inconsistent with earlier work, requiring corrections and repeated debate.
 
-SCP also recommends maintaining a separate human-facing doc (`README.md` or equivalent) for onboarding and usage.
+This phenomenon is referred to as **session amnesia**.
 
 ---
 
-## 4) SCP Contract (hard rules)
+## 2) Analogy: Each New Chat Session Is a New Hire’s First Day
 
-These rules are the “protocol law” that makes SCP reliable across sessions:
+A practical way to visualize session amnesia is to treat each new session as onboarding a new employee who is capable but has not attended earlier meetings.
 
-1. **Single source of continuity truth:** Maintain one `HANDOFF.md` (no competing summaries).
-2. **Concrete, compact writing:** Prefer exact paths, commands, signatures, acceptance checks. Avoid narration.
-3. **Roadmap adherence:** Execute only the deliverables for the **Current session** unless the roadmap explicitly authorizes pulling work forward.
-4. **End-of-session requirements:**
-   - Update `HANDOFF.md` and output it **in full** for the next session.
-   - Update the human-facing `README.md` (or equivalent) when user-facing behavior changes.
+- Without onboarding materials, a new hire will **re-decide** old decisions, misread constraints, and produce output that is reasonable in isolation but **misaligned** with the project’s established direction.
+- Effective teams solve this with an onboarding packet, meeting notes, and change control. SCP applies the same discipline to AI sessions.
 
----
+Mapping:
 
-## 5) SCP lifecycle (how sessions chain)
-
-### Start of a session (inputs)
-
-Operator provides:
-
-1. global instructions (optional but helpful),
-2. the latest `HANDOFF.md`,
-3. the scoped task prompt for this session (often derived from the roadmap).
-
-The agent should treat `HANDOFF.md` as the source of truth and avoid requesting full project context unless explicitly required.
-
-### During the session (execution)
-
-- Implement only what the session scope demands.
-- Keep `HANDOFF.md` synchronized as decisions, interfaces, or key state change.
-
-### End of the session (outputs)
-
-- Emit the full updated `HANDOFF.md`.
-- Update `README.md` (or analogous human-facing docs) if needed.
+- **Project Memory Pack (PMP)** = onboarding brief + current status
+- **Decision Log (ADR-lite)** = key decision history and rationale
+- **No Silent Changes gate** = change control
+- **Closeout (version + changelog)** = end-of-day handoff so the next “new hire” starts aligned
 
 ---
 
-## 6) Why SCP works (token economics)
+## 3) Solution Overview
 
-SCP replaces “load everything” with “load the minimal state vector”:
+Implement **Session Continuity Protocol (SCP)**: a workflow that makes continuity a first-class deliverable.
 
-- It preserves continuity by explicitly carrying decisions, invariants, and current truth.
-- It reduces drift by providing a roadmap and explicit scope boundaries.
-- It increases efficiency by minimizing onboarding tokens per session and maximizing productive tokens.
+SCP uses two required artifacts and one recommended artifact:
 
----
+1. **Project Memory Pack (PMP)** (required)
+   Compact, structured, versioned project state.
 
-## 7) Beyond coding: where SCP generalizes
+2. **Decision Log (ADR-lite)** (required)
+   Short decision records capturing rationale to prevent re-litigating choices.
 
-SCP works anywhere tasks span sessions and correctness depends on prior decisions:
+3. **Changelog/Diff** (recommended)
+   Small delta summary of changes since the prior version.
 
-- Research synthesis: hypotheses, sources, unresolved questions, next experiments.
-- Product/PRDs: decisions, constraints, acceptance criteria, outstanding stakeholder inputs.
-- Legal drafting: definitions, cited clauses, issue list, next redlines.
-- GTM planning: positioning, channel experiments, metrics, next sprint.
+SCP also enforces a key control:
 
-The only change is the nature of “interfaces” (e.g., definitions, decisions, acceptance criteria) and the validation method.
+- **No Silent Changes:** Invariants and key decisions cannot change without explicit documentation.
 
 ---
 
-## 8) Recommended `HANDOFF.md` structure (order matters)
+## 4) Definitions
 
-Put intent and scope before details:
+### 4.1 Project Memory Pack (PMP)
 
-1. **SCP Rules**
-2. **Project Roadmap (session plan + Current session marker)**
-3. Snapshot (current truth in <60 seconds)
-4. Current State (what exists)
-5. Interfaces / Definitions / Contracts (copy exact forms)
-6. Decisions & Invariants (do not silently change)
-7. Work Log (what changed since last session)
-8. Next Session Kickoff (copy/paste tasking to start the next session)
+A concise document that represents the project’s true state: objective, scope, constraints, invariants, key decisions, current status, interfaces, risks, open questions, and next actions.
 
-See, the [Handoff Template](./HANDOFF_TEMPLATE.md) for quick reference.
+### 4.2 Invariants
 
-## 9) Optional: “SCP Kickoff” snippet for any new session
+Statements that must not change unless explicitly approved (e.g., “Database is PostgreSQL,” “Auth token TTL is 15 minutes,” “API paths are stable”).
 
-Paste this at the top of a new session, along with the current `HANDOFF.md`:
+### 4.3 Decision Log (ADR-lite)
 
-```md
-1. Read HANDOFF.md and treat it as the source of truth.
-2. Execute only the scoped task in “Current session”.
-3. Before ending, update HANDOFF.md and output it in full.
+A record of any non-trivial decision including rationale and consequences. This preserves tacit intent that otherwise disappears between sessions.
+
+---
+
+## 5) Required Artifacts
+
+### 5.1 Project Memory Pack (PMP) Template (Required)
+
+```text
+PROJECT MEMORY PACK v{N} (Last updated: {YYYY-MM-DD})
+
+1) Objective
+- ...
+
+2) Scope
+- In scope: ...
+- Out of scope: ...
+
+3) Constraints
+- Hard constraints: ...
+- Preferences: ...
+
+4) Invariants (must not change without explicit decision)
+- ...
+
+5) Key Decisions (with rationale)
+- D1: {decision} — because {rationale}
+- D2: ...
+
+6) Current State
+- Completed: ...
+- In progress: ...
+- Blocked: ...
+
+7) Interfaces / Artifacts (source of truth)
+- API endpoints / function signatures:
+  - ...
+- Data schemas:
+  - ...
+
+8) Known Issues / Risks
+- ...
+
+9) Open Questions (owner + target date if applicable)
+- Q1: ...
+- Q2: ...
+
+10) Next Actions (ordered, each with acceptance criteria)
+- A1: ... (Done when: ...)
+- A2: ...
+```
+
+**Requirements**
+
+- Keep it concise and stateful (target: 300–900 tokens).
+- Edit sections instead of appending narrative.
+- Treat it as the **single source of truth**.
+
+---
+
+### 5.2 Decision Log (ADR-lite) Template (Required)
+
+```text
+DECISION D{N} (YYYY-MM-DD)
+Context: ...
+Decision: ...
+Alternatives considered: ...
+Reasoning: ...
+Consequences / tradeoffs: ...
+Reversal conditions: ...
+```
+
+**When to create a decision entry**
+
+- Tech stack choices (DB, framework, hosting).
+- Architecture decisions (monolith vs services).
+- Interface/schema/contract changes.
+- Performance/security decisions.
+- Any change to an invariant or reversal of a prior key decision.
+
+---
+
+### 5.3 Changelog/Diff Template (Recommended)
+
+```text
+CHANGELOG (since v{N-1})
+- Updated Current State: moved A4 to Completed
+- Added Decision D7: chose PostgreSQL over MongoDB
+- Clarified Invariant #3: auth token TTL fixed at 15m
+```
+
+Purpose: allow new sessions to quickly understand what changed without re-reading everything.
+
+---
+
+## 6) Operating Procedure
+
+### 6.1 Startup Procedure (Bootstrap)
+
+At the start of every session, load the latest PMP (and relevant decisions if not embedded).
+
+**The model must output**
+
+1. Restated constraints and invariants (explicitly).
+2. A plan tied to existing decisions (reference decision IDs where possible).
+3. The first concrete step.
+
+#### Bootstrap Prompt (Paste into every new session)
+
+```text
+You are continuing an ongoing project. Treat the Project Memory Pack below as the source of truth.
+
+Rules:
+1) Do not change any Invariants or Key Decisions unless you explicitly propose a new Decision record explaining why.
+2) If something is missing, state it as an assumption and proceed with the safest default consistent with the Memory Pack.
+3) Start by producing: (a) constraints+invariants restatement, (b) plan tied to decisions, (c) first concrete step.
+
+<Project Memory Pack>
+...paste latest...
+</Project Memory Pack>
 ```
 
 ---
 
-## 10) Guidance on writing a good roadmap (so the agent sees the big picture)
+### 6.2 Change Control: “No Silent Changes” Gate
 
-A roadmap should prevent drift while staying token-efficient. Each session entry should include:
+The model is not allowed to “quietly optimize” by changing fundamentals.
 
-- **Goal:** one sentence that defines why the session exists.
-- **Prereqs:** what must already be true to start safely.
-- **Deliverables:** artifacts the agent must produce (files, decisions, outputs).
-- **Acceptance checks:** how success is verified.
-- **Out of scope:** explicit guardrails.
-- **Risks/notes:** only if they materially reduce mistakes.
+If it wants to change any item in **Invariants** or **Key Decisions**, it must:
 
-A “Current session” marker (e.g., `S3`) is essential so the agent immediately knows where it is in the plan.
+1. Name the invariant/decision being changed,
+2. Provide a rationale,
+3. Add a new ADR-lite decision record documenting the change.
 
 ---
 
-## 11) Operational checklist (for adopting SCP)
+### 6.3 Closeout Procedure (End of Session)
 
-Before ending a session, ensure `HANDOFF.md` answers:
+At session end, produce and persist:
 
-- What is the **Current session** and what deliverables are required by the roadmap?
-- What is true **right now** (status, what works, what’s failing)?
-- What must not change (interfaces/definitions/invariants)?
-- What files/artifacts matter next (minimal map, not everything)?
-- What are the first 3 actions for the next session?
-- What is the acceptance check that proves the next session completed its deliverable?
+1. Updated PMP with version increment (vN → vN+1),
+2. Any new Decision entries,
+3. Changelog vs prior PMP version.
+
+#### Closeout Prompt
+
+```text
+Before we end, produce:
+1) Updated Project Memory Pack (increment version)
+2) Any new Decision entries (ADR-lite)
+3) A short changelog vs prior version
+```
+
+---
+
+## 7) Quality Controls (Recommended)
+
+### 7.1 Consistency Check Block
+
+Require this at the start of the model’s response:
+
+```text
+CONSISTENCY CHECK
+- I will not change: {list invariants}
+- My plan references decisions: {D1, D4, ...}
+- Assumptions I am making: {A1, A2}
+- If an assumption is wrong, my fallback is: {fallback action}
+```
+
+This surfaces hidden assumptions before they cause rework.
+
+### 7.2 Acceptance Criteria for Next Actions
+
+Each “Next Action” must include a “Done when” clause.
+
+Examples:
+
+- “Done when: endpoint returns 200 with schema X and contract tests pass.”
+- “Done when: latency p95 < 200ms on dataset Y.”
+
+---
+
+## 8) Implementation Options
+
+### 8.1 Low-Tech (Copy/Paste or Wiki)
+
+**Best for:** Small teams, early-stage work.
+
+- Store PMP in a shared document (README, Confluence, Notion).
+- Paste PMP into each new session.
+- Update PMP at closeout and paste the new version back into storage.
+
+**Common failure mode:** PMP grows too large. Enforce brevity and move historical details to ADR/changelog.
+
+---
+
+### 8.2 Repo-Based (Recommended)
+
+**Best for:** Most engineering teams.
+
+Suggested structure:
+
+- `docs/project_memory_pack.md`
+- `docs/decisions/` (or `docs/adr/`)
+- `docs/changelog.md` (optional)
+
+Process:
+
+- Update PMP/ADR as part of the development workflow.
+- Review changes like code (diffs are meaningful).
+- Add a PR checklist item: “If multi-session AI was used, update PMP/ADR.”
+
+---
+
+### 8.3 System/Agent-Based (Production)
+
+**Best for:** High-volume AI use or integrated agent tooling.
+
+Persist PMP as structured canonical data, render for humans if needed.
+
+Example canonical JSON state:
+
+```json
+{
+  "version": 12,
+  "objective": "...",
+  "scope": { "in": ["..."], "out": ["..."] },
+  "constraints": { "hard": ["..."], "prefs": ["..."] },
+  "invariants": ["..."],
+  "decisions": [{ "id": "D7", "summary": "...", "rationale": "..." }],
+  "status": { "done": ["..."], "doing": ["..."], "blocked": ["..."] },
+  "next_actions": [{ "id": "A9", "text": "...", "done_when": "..." }]
+}
+```
+
+---
+
+## 9) Advanced Usage: Agent-Managed Continuity (Automated PMP/ADR Maintenance)
+
+This section describes using an agent to maintain the continuity artifacts automatically, so developers do not manually update PMP/ADR/changelog.
+
+### 9.1 Objectives and Design Principles
+
+Agent-managed SCP should satisfy:
+
+1. **Canonical state outside chat**
+2. **Deterministic, reviewable updates**
+3. **No silent changes to invariants/decisions**
+4. **Token efficiency via minimal context loading**
+
+---
+
+### 9.2 Reference Architecture
+
+Typical components:
+
+- **State store (canonical):** `project_state.json` (authoritative)
+- **Human-readable rendering:** `project_memory_pack.md` (optional)
+- **Decision store:** `decisions/` directory or a single file
+- **Changelog store:** optional `changelog.md`
+- **Session orchestrator:** builds prompts, captures outputs, applies validated updates
+- **Validation layer:** schema checks and invariant enforcement
+
+---
+
+### 9.3 Two-Phase Update Model (Strongly Recommended)
+
+**Phase A — Work Output**
+The agent produces the requested work (design/code/spec). It does not mutate state directly.
+
+**Phase B — State Update Proposal**
+The agent produces a structured **patch proposal** describing:
+
+- PMP updates
+- new decisions
+- changelog entries
+- any explicit invariant change request
+
+This enables validation and prevents uncontrolled rewriting of truth.
+
+---
+
+### 9.4 Patch Contract (Update Proposal Format)
+
+Example JSON patch-style proposal:
+
+```json
+{
+  "pmp_version_bump": true,
+  "pmp_updates": [
+    {
+      "op": "add",
+      "path": "/status/done/-",
+      "value": "A11: Add request logging middleware"
+    },
+    {
+      "op": "replace",
+      "path": "/status/doing",
+      "value": ["A12: Add Redis cache layer"]
+    },
+    {
+      "op": "add",
+      "path": "/interfaces/api_endpoints/-",
+      "value": "GET /v1/metrics"
+    }
+  ],
+  "new_decisions": [
+    {
+      "id": "D14",
+      "date": "2025-12-04",
+      "context": "Need caching to reduce DB load under peak traffic.",
+      "decision": "Adopt Redis for caching read-heavy endpoints.",
+      "alternatives": ["In-memory cache", "Memcached", "DB indexing only"],
+      "reasoning": "Redis supports TTL, shared cache across instances, standard ops tooling.",
+      "consequences": "Adds Redis dependency; requires cache invalidation strategy.",
+      "reversal_conditions": "If operational burden exceeds benefit or hit rate < 20%."
+    }
+  ],
+  "changelog": [
+    "Moved A11 to Completed.",
+    "Started A12 in progress.",
+    "Added endpoint GET /v1/metrics.",
+    "Added Decision D14 (Redis caching)."
+  ],
+  "invariant_change_request": null
+}
+```
+
+#### Explicit invariant change requests only
+
+Any invariant change must be isolated and explicit:
+
+```json
+{
+  "invariant_change_request": {
+    "invariant_id": "I3",
+    "current_text": "Auth token TTL fixed at 15m",
+    "proposed_text": "Auth token TTL configurable (default 15m)",
+    "reason": "Customer requires variable TTL for enterprise SSO integration",
+    "required_decision_id": "D15"
+  }
+}
+```
+
+**Validation rule:** Reject patches that alter invariants unless an `invariant_change_request` is present and a corresponding new decision exists.
+
+---
+
+### 9.5 Prompting Pattern for Agent-Managed Operation
+
+Use explicit role separation:
+
+```text
+You must produce two sections:
+
+(1) WORK OUTPUT: do the requested work.
+
+(2) STATE UPDATE PROPOSAL: propose updates to the canonical project state using the patch schema provided.
+
+Rules:
+- Do not modify invariants or key decisions silently.
+- Any invariant change must be in invariant_change_request and must include a new ADR-lite decision.
+- Keep PMP concise; update status/next actions rather than adding narrative.
+```
+
+---
+
+### 9.6 Retrieval Strategy (Token Efficiency)
+
+**Always load**
+
+- Objective, scope, constraints, invariants
+- Current state (done/doing/blocked)
+- Next actions
+- Interfaces/contracts
+
+**Retrieve on demand**
+
+- Relevant decision records by topic (auth, DB, frontend)
+- Supporting artifacts (spec sections, schemas)
+
+---
+
+### 9.7 Validation and Safety Controls
+
+Minimum controls:
+
+- Schema validation (PMP JSON, patch format)
+- Invariant enforcement (“no silent changes”)
+- Decision ID uniqueness and referential integrity
+- Diff generation and review (especially for invariant changes)
+
+---
+
+## 10) Common Failure Modes and Mitigations
+
+1. **PMP becomes too long**
+   Mitigation: enforce size budget; move detail to ADRs and linked artifacts.
+
+2. **Unrecorded rationale causes repeated debates**
+   Mitigation: decision log required for non-trivial choices.
+
+3. **Silent constraint changes**
+   Mitigation: “No Silent Changes” gate + explicit decision entries.
+
+4. **Vague next actions**
+   Mitigation: require “Done when” acceptance criteria.
+
+5. **Agent claims progress it did not actually complete**
+   Mitigation: require evidence in “Completed” items (PR link, commit hash, test results), or gate completion behind external checks.
+
+---
+
+## 11) Minimal Checklist (Operational)
+
+### Start of session
+
+- Load latest PMP.
+- Confirm constraints and invariants are restated.
+- Confirm proposed plan references decision IDs.
+
+### During session
+
+- Create ADR-lite entries for material decisions.
+- Update interfaces/contracts in PMP when they change.
+
+### End of session
+
+- Increment PMP version and persist updates.
+- Persist new decision entries.
+- Write a short changelog.
+
+---
+
+## 12) Adoption Guidance
+
+To deploy SCP across a team:
+
+1. Add PMP and ADR templates to your repo or documentation system.
+2. Add a PR checklist line: “If multi-session AI was used, PMP/ADR updated.”
+3. Teach the analogy: “Each session is a new hire; give them the onboarding packet.”
+4. If using an agent, implement two-phase updates with validation and diff review.
+
+---
+
+### One-sentence summary for internal docs
+
+“Treat each new AI session like onboarding a new developer: provide the onboarding brief (PMP), the decision history (ADR-lite), enforce change control (no silent changes), and require an end-of-session handoff (version + changelog).”
+
+## Glossary
+
+- **Context Window**: The maximum amount of text (tokens) an LLM can consider at once. Older context is truncated when the window is exceeded.
+- **Drift**: Gradual divergence of outputs from the project’s established decisions, constraints, and intent, often caused by missing state or silent assumption changes across sessions.
+- **Invariant**: A project rule or constraint that must remain stable unless explicitly changed through change control (e.g., “Use PostgreSQL,” “Endpoints are versioned under /v1”).
+- **Session Amnesia**: Loss of continuity across sessions where the model lacks prior state and decisions, leading to rework, incorrect assumptions, and misalignment.
+- **Tacit (Tacit Knowledge / Tacit Decisions)**: Information that is “known” by participants through experience or prior discussion but is not explicitly documented (e.g., “we rejected option B because ops can’t support it”). Tacit knowledge is a primary driver of drift if not captured in decisions.
+- **Token Budget / Token Efficiency**: The practical limit on how much text you can include in prompts and responses; SCP aims to minimize repeated context loading by storing compact state.
+- **Two-Phase Update Model**: An agent workflow where the model first produces work output, then separately produces a structured state update proposal that is validated and applied, preventing uncontrolled state mutation.
+- **ADR (Architecture Decision Record)**: A formal method of documenting architecture decisions, typically including context, decision, alternatives, and consequences.
+- **ADR-lite**: A simplified, lightweight ADR format used to capture essential decision rationale without heavy process; sufficient to prevent re-deciding and preserve intent across sessions.
