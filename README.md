@@ -538,3 +538,7 @@ To deploy SCP across a team:
 - **Two-Phase Update Model**: An agent workflow where the model first produces work output, then separately produces a structured state update proposal that is validated and applied, preventing uncontrolled state mutation.
 - **ADR (Architecture Decision Record)**: A formal method of documenting architecture decisions, typically including context, decision, alternatives, and consequences.
 - **ADR-lite**: A simplified, lightweight ADR format used to capture essential decision rationale without heavy process; sufficient to prevent re-deciding and preserve intent across sessions.
+
+## License
+
+The SCP specification and other documentation in this repository are licensed under **CC BY 4.0** (see `LICENSE`).
