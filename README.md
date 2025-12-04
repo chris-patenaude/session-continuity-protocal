@@ -517,9 +517,15 @@ To deploy SCP across a team:
 
 ---
 
-### One-sentence summary for internal docs
+## Resources
 
-“Treat each new AI session like onboarding a new developer: provide the onboarding brief (PMP), the decision history (ADR-lite), enforce change control (no silent changes), and require an end-of-session handoff (version + changelog).”
+- **Architecture Decision Records (ADRs) and decision logs:** ([Architectural Decision Records][1])
+- **ADR definition and common structure (context/decision/consequences):** ([GitHub][2])
+- **Tokens and tokenization (context window mechanics and token budgeting):** ([help.openai.com][3])
+
+[1]: https://adr.github.io/?utm_source=chatgpt.com "Architectural Decision Records"
+[2]: https://github.com/joelparkerhenderson/architecture-decision-record?utm_source=chatgpt.com "Architecture decision record (ADR) examples for software ..."
+[3]: https://help.openai.com/en/articles/4936856-what-are-tokens-and-how-to-count-them?utm_source=chatgpt.com "What are tokens and how to count them?"
 
 ## Glossary
 
